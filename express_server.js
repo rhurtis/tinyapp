@@ -48,6 +48,16 @@ app.post("/urls", (req, res) => {
   res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);         // Respond with 'Ok' (we will replace this)
 });
 
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  console.log('the url is being deleted.');
+  delete urlDatabase[req.body.shortURL];
+  console.log(urlDatabase);
+  res.redirect('/urls');
+
+})
+
+
 app.get("/u/:shortURL", (req, res) => {
   // const longURL = ...
   // let currentURL = window.location.href;
@@ -62,6 +72,8 @@ app.get("/u/:shortURL", (req, res) => {
 
   res.redirect(urlDatabase[req.params.shortURL]);
 });
+
+
 
 
 app.get("/urls/:shortURL", (req, res) => {
