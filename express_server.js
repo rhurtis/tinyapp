@@ -41,6 +41,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// post request for generating a new url
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   urlDatabase[generateRandomString()] = req.body['longURL'];
@@ -48,7 +49,7 @@ app.post("/urls", (req, res) => {
   res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);         // Respond with 'Ok' (we will replace this)
 });
 
-
+// post request for deleting urls
 app.post("/urls/:shortURL/delete", (req, res) => {
   console.log('the url is being deleted.',req.params.shortURL);
   
@@ -57,6 +58,26 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect('/urls');
 
 })
+
+// post request for editing the url
+app.post("/urls/:shortURL", (req, res) => {
+  console.log('the following tiny url is being updated.',req.params.shortURL);
+  urlDatabase[req.params.shortURL] = req.body['longURL']
+  
+  console.log(urlDatabase);
+  //res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);
+  res.redirect('/urls');
+})
+
+
+
+// get request for the edit button on the index page
+app.get("/urls/", (req, res) => {
+  console.log('going to the url page')
+  res.redirect('/urls/:shortURL')
+})
+
+
 
 
 app.get("/u/:shortURL", (req, res) => {
