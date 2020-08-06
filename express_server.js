@@ -43,13 +43,32 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  urlDatabase[generateRandomString()] = req.body['longURL'];
+  console.log(urlDatabase);
+  res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);         // Respond with 'Ok' (we will replace this)
 });
+
+app.get("/u/:shortURL", (req, res) => {
+  // const longURL = ...
+  // let currentURL = window.location.href;
+  // console.log(currentURL);
+  // let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  // res.render("urls_show", templateVars);
+  //res.render(":shortURL");
+ // let urlID = req.ry.id;
+ // console.log(urlDatabase[req.params.shortURL]);
+
+
+
+  res.redirect(urlDatabase[req.params.shortURL]);
+});
+
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
+
 
 
 function generateRandomString() {
