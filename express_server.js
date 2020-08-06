@@ -50,8 +50,9 @@ app.post("/urls", (req, res) => {
 
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log('the url is being deleted.');
-  delete urlDatabase[req.body.shortURL];
+  console.log('the url is being deleted.',req.params.shortURL);
+  
+  delete urlDatabase[req.params.shortURL];
   console.log(urlDatabase);
   res.redirect('/urls');
 
