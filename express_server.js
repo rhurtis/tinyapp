@@ -101,6 +101,29 @@ app.post('/logout', (req, res) => {
 })
 
 
+// get request for a /register page
+app.get("/register",(req, res) => {
+  console.log('welcome to the registration page.');
+  let templateVars = { 
+    username: req.cookies['username']
+   };
+  res.render("register_page",templateVars);
+})
+
+
+// post request for a register page
+app.post('/register', (req,res) => {
+  console.log('data has been submitted');
+  console.log(req.body);
+
+
+})
+
+
+
+
+
+
 // get request for the edit button on the index page
 app.get("/urls/", (req, res) => {
   console.log('going to the url page')
