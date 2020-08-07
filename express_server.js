@@ -54,14 +54,15 @@ app.get("/hello", (req, res) => {
 // new route for /urls; this will pass URL data to our template
 app.get("/urls", (req,res) => {
   let templateVars = { urls: urlDatabase,
-  username: req.cookies['username']
+  //username: req.cookies['username'],
+  username: users[req.cookies['user_id']]
  };
   res.render("urls_index", templateVars);
 });
 
 // post request for generating a new url
 app.post("/urls", (req, res) => {
-  console.log('got here')
+  console.log('got to the /urls page')
   console.log('req.body',req.body);  // Log the POST request body to the console
   urlDatabase[generateRandomString()] = req.body['longURL'];
   console.log('this is the url database',urlDatabase);
@@ -71,7 +72,8 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   let templateVars = { 
-    username: req.cookies['username']
+    //username: req.cookies['username']
+      username: users[req.cookies['user_id']]
    };
   res.render("urls_new",templateVars);
 });
@@ -121,7 +123,8 @@ app.post('/logout', (req, res) => {
 app.get("/register",(req, res) => {
   console.log('welcome to the registration page.');
   let templateVars = { 
-    username: req.cookies['username']
+    //username: req.cookies['username']
+    username: users[req.cookies['user_id']]
    };
   res.render("register_page",templateVars);
 })
@@ -172,7 +175,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],  username: req.cookies['username']  };
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],  
+
+   // username: req.cookies['username'] 
+    username: users[req.cookies['user_id']]
+   };
   res.render("urls_show", templateVars);
 });
 

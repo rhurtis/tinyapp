@@ -11,8 +11,8 @@
 
         <!-- the follow code is for the username login/logout feature-->
 
-         <% if(username !== undefined) {    %> 
-          <a class="navbar-brand" href="/urls">The current user is: <%= username %> </a>
+         <% if(username) {    %> 
+          <a class="navbar-brand" href="/urls">The current user is: <%= username.email %> </a>
           <form class="form-inline" action="/logout" method="POST">
           
             <button type="submit" class="btn btn-primary">Logout</button>
