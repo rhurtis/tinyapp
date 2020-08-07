@@ -12,11 +12,27 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
-
+// object for storing urls
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
+
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -115,8 +131,9 @@ app.get("/register",(req, res) => {
 app.post('/register', (req,res) => {
   console.log('data has been submitted');
   console.log(req.body);
-
-
+  let tempID = generateRandomString();
+  users[tempID] = {id: tempID, email: req.body.email,password:req.body.password};
+  console.log(users);
 })
 
 
