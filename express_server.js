@@ -14,8 +14,8 @@ app.set("view engine", "ejs");
 
 // object for storing urls
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {longURL: "http://www.lighthouselabs.ca", user_id: "userRandomID"},
+  "9sm5xK": {longURL: "http://www.google.com", user_id: "user2RandomID"}
 };
 
 const users = { 
@@ -31,7 +31,7 @@ const users = {
   }
 }
 
-//const usersPrecheck = {};
+
 
 
 app.get("/", (req, res) => {
@@ -64,11 +64,20 @@ app.get("/urls", (req,res) => {
 // post request for generating a new url
 app.post("/urls", (req, res) => {
   console.log('got to the /urls page')
+
+  
   console.log('req.body',req.body);  // Log the POST request body to the console
-  urlDatabase[generateRandomString()] = req.body['longURL'];
+  urlDatabase[generateRandomString()] = {
+    longURL: req.body['longURL'],
+    user_id: req.cookies['user_id']
+    }
   console.log('this is the url database',urlDatabase);
   //res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);         // Respond with 'Ok' (we will replace this)
   res.redirect('/urls');
+
+
+
+
 });
 
 app.get("/urls/new", (req, res) => {
@@ -77,7 +86,11 @@ app.get("/urls/new", (req, res) => {
       //username: users[req.cookies['user_id']]
       user_id: users[req.cookies['user_id']]
    };
+
+  
+  
   res.render("urls_new",templateVars);
+
 });
 
 
@@ -85,7 +98,7 @@ app.get("/urls/new", (req, res) => {
 app.get('/login', (req,res) => {
   let templateVars = { 
     //username: req.cookies['username']
-      //username: users[req.cookies['user_id']]
+    //username: users[req.cookies['user_id']]
     user_id: users[req.cookies['user_id']]
    };
   res.render('login_page.ejs',templateVars);
@@ -105,7 +118,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 // post request for editing the url
 app.post("/urls/:shortURL", (req, res) => {
   console.log('the following tiny url is being updated.',req.params.shortURL);
-  urlDatabase[req.params.shortURL] = req.body['longURL']
+  urlDatabase[req.params.shortURL] = {'longURL':req.body['longURL'], 'user_id':req.cookies['user_id']}
   
   console.log(urlDatabase);
   //res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);
@@ -232,6 +245,7 @@ app.post('/register', (req,res) => {
 
 // get request for the edit button on the index page
 app.get("/urls/", (req, res) => {
+
   console.log('going to the url page')
   res.redirect('/urls/:shortURL')
 })
@@ -251,17 +265,19 @@ app.get("/u/:shortURL", (req, res) => {
 
 
 
-  res.redirect(urlDatabase[req.params.shortURL]);
+  res.redirect(urlDatabase[req.params.shortURL]['longURL']);
 });
 
 
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],  
+  let templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]['longURL'],  
 
    // username: req.cookies['username'] 
-    username: users[req.cookies['user_id']]
+    user_id: users[req.cookies['user_id']]
    };
   res.render("urls_show", templateVars);
 });
