@@ -31,7 +31,7 @@ const users = {
   }
 }
 
-
+//const usersPrecheck = {};
 
 
 app.get("/", (req, res) => {
@@ -135,11 +135,43 @@ app.post('/register', (req,res) => {
   console.log('data has been submitted');
   console.log(req.body);
   let tempID = generateRandomString();
+  
+  
+  // the following if statement is for checking if the email address has already been used.
+  usersPrecheck = req.body.email; //this variable stores the email input before submission
+  if (emailLookup(usersPrecheck)) {
+    //delete users[tempID] //deletes the user that was generated
+    //res.clearCookie('user_id');
+    
+    res.status(400);
+    res.send('Thou shalt not pass: Sorry but this email address has already been registered.');
+    console.log('email already exists');
+  }
+ 
+ 
+ 
   users[tempID] = {id: tempID, email: req.body.email,password:req.body.password};
   res.cookie('user_id',users[tempID].id);
   console.log(users);
 
+  if (users[tempID].email.length === 0 || users[tempID].password.length === 0) {
+    delete users[tempID] //deletes the user that was generated
+    res.clearCookie('user_id');
+    
+    res.status(400);
+    res.send('Thou shalt not pass: Username and/or password field is blank.');
+    console.log('user/pw is blank');
+    
+  } else {
+
   res.redirect('/urls');
+  console.log(users);
+  }
+
+
+
+
+  
 })
 
 
@@ -187,4 +219,26 @@ app.get("/urls/:shortURL", (req, res) => {
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2,5);
+}
+
+const emailLookup = function (checkEmail) {
+  let allUsers = Object.keys(users); //need to know to loop through
+  //console.log('here are all the users',allUsers)
+  // now loop through users object for every element in the allUsers array
+  for (let user of allUsers) {
+    //console.log('here is a user object',users[user]);
+
+    // convert the user object into an array for looping, specifically get the values of the array.
+
+    let userValues = Object.values(users[user]);
+    //console.log('here are the values of this user object',userValues);
+
+
+    // now check if a specific email is included in the values of that user
+    if (userValues.includes(checkEmail)) {
+      console.log('this email has already been registered.')
+      return true;
+    }
+  }
+  return false;
 }
