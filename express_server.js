@@ -12,11 +12,27 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
-
+// object for storing urls
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
+//const usersPrecheck = {};
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -38,14 +54,16 @@ app.get("/hello", (req, res) => {
 // new route for /urls; this will pass URL data to our template
 app.get("/urls", (req,res) => {
   let templateVars = { urls: urlDatabase,
-  username: req.cookies['username']
+  //username: req.cookies['username'],
+  //username: users[req.cookies['user_id']]
+  user_id: users[req.cookies['user_id']]
  };
   res.render("urls_index", templateVars);
 });
 
 // post request for generating a new url
 app.post("/urls", (req, res) => {
-  console.log('got here')
+  console.log('got to the /urls page')
   console.log('req.body',req.body);  // Log the POST request body to the console
   urlDatabase[generateRandomString()] = req.body['longURL'];
   console.log('this is the url database',urlDatabase);
@@ -55,11 +73,23 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   let templateVars = { 
-    username: req.cookies['username']
+    //username: req.cookies['username']
+      //username: users[req.cookies['user_id']]
+      user_id: users[req.cookies['user_id']]
    };
   res.render("urls_new",templateVars);
 });
 
+
+// get request for a new login page
+app.get('/login', (req,res) => {
+  let templateVars = { 
+    //username: req.cookies['username']
+      //username: users[req.cookies['user_id']]
+    user_id: users[req.cookies['user_id']]
+   };
+  res.render('login_page.ejs',templateVars);
+})
 
 
 // post request for deleting urls
@@ -82,23 +112,122 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect('/urls');
 })
 
-// post request for logging in
-app.post("/login", (req, res) => {
-  console.log('a login attempt was made');
-  console.log(req.body);  // Log the POST request body to the console
+// post request for logging in (this is the old one.)
+// app.post("/login", (req, res) => {
+//   console.log('a login attempt was made');
+//   console.log(req.body);  // Log the POST request body to the console
   
-  res.cookie('username',req.body.username);
-  res.redirect('/urls');
+//   res.cookie('username',req.body.username);
+//   res.redirect('/urls');
   
-});
+// });
 
 app.post('/logout', (req, res) => {
 
-  res.clearCookie('username');
+  console.log('user logged out')
+  res.clearCookie('user_id');
   res.redirect('/urls');
 
 
 })
+
+// post request for the new login page
+app.post('/login', (req, res) => {
+  console.log('a login attempt was made');
+  // needs to lookup the username/pw that is entered and confirm a match
+  // also needs to set the user_id cookie upon a successful login
+
+  // first use the emaillookup fcn to determine if the email exists in the db
+
+  if (emailLookup(req.body.email)) {
+    console.log('the email exists.');
+
+    // retrieve the associated user info
+    let correctUserInfo = assID(req.body.email);
+    console.log('here is the correct info for this email',correctUserInfo);
+    let correctID = correctUserInfo[0];
+    let correctPW = correctUserInfo[2];
+    if (req.body.password === correctPW) {
+      console.log('the login was successful');
+      res.cookie('user_id',correctID);
+      res.redirect('/urls');
+    } else{
+      console.log('wrong password');
+      res.status(403);
+      res.send('wrong password');
+    }
+  } else {
+    console.log('email does not exist');
+    res.status(403);
+    res.send('email does not exist');
+  }
+
+
+})
+
+
+
+
+
+// get request for a /register page
+app.get("/register",(req, res) => {
+  console.log('welcome to the registration page.');
+  let templateVars = { 
+    //username: req.cookies['username']
+    //username: users[req.cookies['user_id']]
+    user_id: users[req.cookies['user_id']]
+   };
+  res.render("register_page",templateVars);
+})
+
+
+// post request for a register page
+app.post('/register', (req,res) => {
+  console.log('data has been submitted');
+  //console.log(req.body);
+  let tempID = generateRandomString();
+  
+  
+  // the following if statement is for checking if the email address has already been used.
+  usersPrecheck = req.body.email; //this variable stores the email input before submission
+  if (emailLookup(usersPrecheck)) {
+    //delete users[tempID] //deletes the user that was generated
+    //res.clearCookie('user_id');
+    
+    res.status(400);
+    res.send('Thou shalt not pass: Sorry but this email address has already been registered.');
+    console.log('email already exists');
+  }
+ 
+ 
+ 
+  users[tempID] = {id: tempID, email: req.body.email,password:req.body.password};
+  res.cookie('user_id',users[tempID].id);
+  //console.log(users);
+
+  if (users[tempID].email.length === 0 || users[tempID].password.length === 0) {
+    delete users[tempID] //deletes the user that was generated
+    res.clearCookie('user_id');
+    
+    res.status(400);
+    res.send('Thou shalt not pass: Username and/or password field is blank.');
+    console.log('user/pw is blank');
+    
+  } else {
+
+  res.redirect('/urls');
+  console.log(users);
+  }
+
+
+
+
+  
+})
+
+
+
+
 
 
 // get request for the edit button on the index page
@@ -129,7 +258,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],  username: req.cookies['username']  };
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],  
+
+   // username: req.cookies['username'] 
+    username: users[req.cookies['user_id']]
+   };
   res.render("urls_show", templateVars);
 });
 
@@ -137,4 +270,44 @@ app.get("/urls/:shortURL", (req, res) => {
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2,5);
+}
+
+const emailLookup = function (checkEmail) {
+  let allUsers = Object.keys(users); //need to know to loop through
+  //console.log('here are all the users',allUsers)
+  // now loop through users object for every element in the allUsers array
+  for (let user of allUsers) {
+    //console.log('here is a user object',users[user]);
+
+    // convert the user object into an array for looping, specifically get the values of the array.
+
+    let userValues = Object.values(users[user]);
+    //console.log('here are the values of this user object',userValues);
+
+
+    // now check if a specific email is included in the values of that user
+    if (userValues.includes(checkEmail)) {
+      console.log('this email is in the db')
+      return true;
+    }
+  }
+  return false;
+}
+
+
+// function that finds the associated id/pw of an email address.
+const assID = function(confirmedEmail) {
+  //find the index of the id/pw in relation to the index of the email
+  let allUsers = Object.keys(users);
+
+  for (let user of allUsers) {
+    let userValues = Object.values(users[user]);
+   
+    if (userValues.includes(confirmedEmail)) {
+      //onsole.log('this is the user data for the correct email:', userValues)
+      //userValues.indexOf(confirmedEmail);
+      return userValues;
+    }
+    
+  }
 }
