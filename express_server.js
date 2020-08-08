@@ -79,6 +79,15 @@ app.get("/urls/new", (req, res) => {
 });
 
 
+// get request for a new login page
+app.get('/login', (req,res) => {
+  let templateVars = { 
+    //username: req.cookies['username']
+      username: users[req.cookies['user_id']]
+   };
+  res.render('login_page.ejs',templateVars);
+})
+
 
 // post request for deleting urls
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -117,6 +126,18 @@ app.post('/logout', (req, res) => {
 
 
 })
+
+// post request for the new login page
+app.post('/login', (req, res) => {
+
+  
+  res.redirect('/urls');
+
+
+})
+
+
+
 
 
 // get request for a /register page
