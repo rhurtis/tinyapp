@@ -13,25 +13,19 @@
 
         <!-- the follow code is for the username login/logout feature-->
 
-         <!-- <% if(username) {    %> 
-          <a class="navbar-brand" href="/urls">The current user is: <%= username.email %> </a>
+          <% if(user_id) {    %>
+          <a class="navbar-brand" href="/urls">The current user is: <%= user_id.email %> </a>
           <form class="form-inline" action="/logout" method="POST">
           
             <button type="submit" class="btn btn-primary">Logout</button>
           
           </form>
 
-
+         
 
          <%} else {%> 
-        <form class="form-inline" action="/login" method="POST">
-          <div class="form-group mb-2">
-            <label for="username">Login Here:</label>
-            <input class="form-control" type="text" name="username" placeholder="username" style="width: 300px; margin: 1em">
-            <button type="submit" class="btn btn-primary">Login</button>
-          </div>
-          </form>
-        <%} %> -->
+
+        <%} %> 
 
 
           
