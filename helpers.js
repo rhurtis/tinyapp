@@ -32,7 +32,7 @@ const assID = function(confirmedEmail, database) {
     let userValues = Object.values(database[user]);
    
     if (userValues.includes(confirmedEmail)) {
-      //onsole.log('this is the user data for the correct email:', userValues)
+      //console.log('this is the user data for the correct email:', userValues)
       //userValues.indexOf(confirmedEmail);
       return userValues;
     }
