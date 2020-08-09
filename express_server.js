@@ -1,9 +1,9 @@
 const express = require("express");
-//const cookieParser = require('cookie-parser')
-const cookieSession = require('cookie-session')
+
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const app = express();
-//app.use(cookieParser())
+
 
 const helperFunctions = require('./helpers');
 
@@ -37,18 +37,18 @@ let usersURLS = {};
 
 
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
-}
+};
 
 
 
@@ -58,7 +58,7 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
 
 app.get("/urls.json", (req, res) => {
@@ -72,31 +72,27 @@ app.get("/hello", (req, res) => {
 
 // new route for /urls; this will pass URL data to our template
 app.get("/urls", (req,res) => {
-  let templateVars = { 
-  //urls: urlDatabase,
-  //urls: urlsForUser(req.cookies['user_id']),
-  urls: helperFunctions.urlsForUser(req.session['user_id'], urlDatabase, usersURLS),
-  //username: req.cookies['username'],
-  //username: users[req.cookies['user_id']]
-  //user_id: users[req.cookies['user_id']]
-  user_id: users[req.session['user_id']]
- };
+  let templateVars = {
+
+    urls: helperFunctions.urlsForUser(req.session['user_id'], urlDatabase, usersURLS),
+
+    user_id: users[req.session['user_id']]
+  };
   res.render("urls_index", templateVars);
 });
 
 // post request for generating a new url
 app.post("/urls", (req, res) => {
-  console.log('got to the /urls page')
+  
 
   
-  console.log('req.body',req.body);  // Log the POST request body to the console
+  
   urlDatabase[helperFunctions.generateRandomString()] = {
     longURL: req.body['longURL'],
-    //user_id: req.cookies['user_id']
+
     user_id: req.session['user_id']
-    }
-  console.log('this is the url database',urlDatabase);
-  //res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);         // Respond with 'Ok' (we will replace this)
+  };
+
   res.redirect('/urls');
 
 
@@ -105,12 +101,10 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  let templateVars = { 
-    //username: req.cookies['username']
-      //username: users[req.cookies['user_id']]
-      //user_id: users[req.cookies['user_id']]
-      user_id: users[req.session['user_id']]
-   };
+  let templateVars = {
+
+    user_id: users[req.session['user_id']]
+  };
 
   
   
@@ -121,102 +115,85 @@ app.get("/urls/new", (req, res) => {
 
 // get request for a new login page
 app.get('/login', (req,res) => {
-  let templateVars = { 
-    //username: req.cookies['username']
-    //username: users[req.cookies['user_id']]
-    //user_id: users[req.cookies['user_id']]
+  let templateVars = {
+
     user_id: users[req.session['user_id']]
-   };
+  };
+
   res.render('login_page.ejs',templateVars);
-})
+});
 
 
 // post request for deleting urls
 app.post("/urls/:shortURL/delete", (req, res) => {
   
   // if statement for making sure only a logged in user can delete
-  if (req.session['user_id'] === urlDatabase[req.params.shortURL].user_id){
-  console.log('the url is being deleted.',req.params.shortURL);
-  delete urlDatabase[req.params.shortURL];
-  delete usersURLS[req.params.shortURL];
-  console.log('here is the entire db after deletion',urlDatabase);
-  console.log('here is the usersURL db after deletion',usersURLS);
-  res.redirect('/urls');} else{
+  if (req.session['user_id'] === urlDatabase[req.params.shortURL].user_id) {
+    
+    delete urlDatabase[req.params.shortURL];
+    delete usersURLS[req.params.shortURL];
+
+    res.redirect('/urls');
+  } else {
     res.redirect('/login');
   }
 
-})
+});
 
 // post request for editing the url
 app.post("/urls/:shortURL", (req, res) => {
   
   // if statement for making sure only a logged in user can edit
   if (req.session['user_id'] === urlDatabase[req.params.shortURL].user_id) {
-    console.log('the following tiny url is being updated.',req.params.shortURL);
-    urlDatabase[req.params.shortURL] = {'longURL':req.body['longURL'], 'user_id':req.session['user_id']}
+    
+    urlDatabase[req.params.shortURL] = {'longURL':req.body['longURL'], 'user_id':req.session['user_id']};
   
-  console.log(urlDatabase);
-  //res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);
-  res.redirect('/urls');} else{
+    
+    res.redirect('/urls');
+  } else {
     res.redirect('/login');
   }
-})
+});
 
-// post request for logging in (this is the old one.)
-// app.post("/login", (req, res) => {
-//   console.log('a login attempt was made');
-//   console.log(req.body);  // Log the POST request body to the console
-  
-//   res.cookie('username',req.body.username);
-//   res.redirect('/urls');
-  
-// });
 
 app.post('/logout', (req, res) => {
 
-  console.log('user logged out')
-  //res.clearCookie('user_id');
   req.session['user_id'] = null;
   usersURLS = {};
   res.redirect('/login');
 
 
-})
+});
 
 // post request for the new login page
 app.post('/login', (req, res) => {
-  console.log('a login attempt was made');
-  // needs to lookup the username/pw that is entered and confirm a match
-  // also needs to set the user_id cookie upon a successful login
 
-  // first use the emaillookup fcn to determine if the email exists in the db
 
   if (helperFunctions.emailLookup(req.body.email, users)) {
-    console.log('the email exists.');
+    
 
     // retrieve the associated user info
-    let correctUserInfo = helperFunctions.assID(req.body.email, users);
-    console.log('here is the correct info for this email',correctUserInfo);
+    let correctUserInfo = helperFunctions.associatedID(req.body.email, users);
+    
     let correctID = correctUserInfo[0];
     let correctPW = correctUserInfo[2];
     if (bcrypt.compareSync(req.body.password, correctPW)) {
-      console.log('the login was successful');
-      //res.cookie('user_id',correctID);
+      
       req.session['user_id'] = correctID;
       res.redirect('/urls');
-    } else{
-      console.log('wrong password');
+    } else {
+      
       res.status(403);
       res.send('wrong password');
     }
   } else {
-    console.log('email does not exist');
+    
     res.status(403);
     res.send('email does not exist');
   }
 
 
-})
+});
 
 
 
@@ -224,61 +201,57 @@ app.post('/login', (req, res) => {
 
 // get request for a /register page
 app.get("/register",(req, res) => {
-  console.log('welcome to the registration page.');
-  let templateVars = { 
-    //username: req.cookies['username']
-    //username: users[req.cookies['user_id']]
-    //user_id: users[req.cookies['user_id']]
+  
+  let templateVars = {
+
     user_id: users[req.session['user_id']]
-   };
+  };
   res.render("register_page",templateVars);
-})
+});
 
 
 // post request for a register page
 app.post('/register', (req,res) => {
-  console.log('data has been submitted');
-  //console.log(req.body);
+  
+  
   let tempID = helperFunctions.generateRandomString();
   
   
   // the following if statement is for checking if the email address has already been used.
-  usersPrecheck = req.body.email; //this variable stores the email input before submission
+  let usersPrecheck = req.body.email; //this variable stores the email input before validation
   if (helperFunctions.emailLookup(usersPrecheck, users)) {
-    //delete users[tempID] //deletes the user that was generated
-    //res.clearCookie('user_id');
-    
+  
     res.status(400);
-    res.send('Thou shalt not pass: Sorry but this email address has already been registered.');
-    console.log('email already exists');
+    res.send('Sorry but this email address has already been registered.');
+    
   }
  
  
  
   users[tempID] = {id: tempID, email: req.body.email,password:bcrypt.hashSync(req.body.password,10)};
-  //res.cookie('user_id',users[tempID].id);
+  
   req.session['user_id'] = users[tempID].id;
-  //console.log(users);
+  
 
   if (users[tempID].email.length === 0 || users[tempID].password.length === 0) {
-    delete users[tempID] //deletes the user that was generated
-    //res.clearCookie('user_id');
+    delete users[tempID]; //deletes the user that was generated
+    
     req.session['user_id'] = null;
     res.status(400);
     res.send('Thou shalt not pass: Username and/or password field is blank.');
-    console.log('user/pw is blank');
+    
     
   } else {
 
-  res.redirect('/urls');
-  console.log(users);
+    res.redirect('/urls');
+    
   }
 
 
 
 
   
-})
+});
 
 
 
@@ -288,25 +261,14 @@ app.post('/register', (req,res) => {
 // get request for the edit button on the index page
 app.get("/urls/", (req, res) => {
 
-  console.log('going to the url page')
-  res.redirect('/urls/:shortURL')
-})
+  
+  res.redirect('/urls/:shortURL');
+});
 
 
 
 
 app.get("/u/:shortURL", (req, res) => {
-  // const longURL = ...
-  // let currentURL = window.location.href;
-  // console.log(currentURL);
-  // let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  // res.render("urls_show", templateVars);
-  //res.render(":shortURL");
- // let urlID = req.ry.id;
- // console.log(urlDatabase[req.params.shortURL]);
-
-
-
   res.redirect(urlDatabase[req.params.shortURL]['longURL']);
 });
 
@@ -314,169 +276,17 @@ app.get("/u/:shortURL", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { 
+  let templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]['longURL'],  
+    longURL: urlDatabase[req.params.shortURL]['longURL'],
 
-   // username: req.cookies['username'] 
-    //user_id: users[req.cookies['user_id']]
+
     user_id: users[req.session['user_id']]
-   };
+  };
   res.render("urls_show", templateVars);
 });
 
 
-
-// function generateRandomString() {
-//   return Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2,5);
-// }
-
-// // const emailLookup = function (checkEmail) {
-// //   let allUsers = Object.keys(users); //need to know to loop through
-// //   //console.log('here are all the users',allUsers)
-// //   // now loop through users object for every element in the allUsers array
-// //   for (let user of allUsers) {
-// //     //console.log('here is a user object',users[user]);
-
-// //     // convert the user object into an array for looping, specifically get the values of the array.
-
-// //     let userValues = Object.values(users[user]);
-// //     //console.log('here are the values of this user object',userValues);
-
-
-// //     // now check if a specific email is included in the values of that user
-// //     if (userValues.includes(checkEmail)) {
-// //       console.log('this email is in the db')
-// //       return true;
-// //     }
-// //   }
-// //   return false;
-// // }
-
-
-// // modifying the email lookup fcn to take in a database parameter
-// // it passes the user fcn
-// const emailLookup = function (checkEmail, database) {
-//   let allUsers = Object.keys(database); //need to know to loop through
-//   //console.log('here are all the users',allUsers)
-//   // now loop through users object for every element in the allUsers array
-//   for (let user of allUsers) {
-//     //console.log('here is a user object',users[user]);
-
-//     // convert the user object into an array for looping, specifically get the values of the array.
-
-//     let userValues = Object.values(database[user]);
-//     //console.log('here are the values of this user object',userValues);
-
-
-//     // now check if a specific email is included in the values of that user
-//     if (userValues.includes(checkEmail)) {
-//       console.log('this email is in the db')
-//       return true;
-//     }
-//   }
-//   return false;
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // function that finds the associated id/pw of an email address.
-// // const assID = function(confirmedEmail) {
-// //   //find the index of the id/pw in relation to the index of the email
-// //   let allUsers = Object.keys(users);
-
-// //   for (let user of allUsers) {
-// //     let userValues = Object.values(users[user]);
-   
-// //     if (userValues.includes(confirmedEmail)) {
-// //       //onsole.log('this is the user data for the correct email:', userValues)
-// //       //userValues.indexOf(confirmedEmail);
-// //       return userValues;
-// //     }
-    
-// //   }
-// // }
-
-
-
-
-
-// // modifying the assID fcn above to pass any database
-// // note:  it uses the users database as an argument
-// const assID = function(confirmedEmail, database) {
-//   //find the index of the id/pw in relation to the index of the email
-//   let allUsers = Object.keys(database);
-
-//   for (let user of allUsers) {
-//     let userValues = Object.values(database[user]);
-   
-//     if (userValues.includes(confirmedEmail)) {
-//       //onsole.log('this is the user data for the correct email:', userValues)
-//       //userValues.indexOf(confirmedEmail);
-//       return userValues;
-//     }
-    
-//   }
-// }
-
-
-
-
-
-// // function which returns the URLs where the userID is equal to the id of the currently logged-in user.
-// // const urlsForUser = function(id) {
-// //   //id = req.cookies['user_id'];
-
-// //   // the object that will store this particular users information
-// //   // it will not contain nested objects
-// //   // shortURL:LongURL
-// //   //let usersURLS = {};
-
-// //   for (let x in urlDatabase) {
-    
-// //     //console.log(urlDatabase[x]['user_id']);
-// //     if (urlDatabase[x]['user_id'] === id) {
-// //       usersURLS[x] = urlDatabase[x]['longURL'];
-// //     }
-// //   }
-// //   console.log('here is the usersURLS object',usersURLS);
-// //   return usersURLS;
-// // }
-
-
-
-// // modifying the fcn above to pass a database parameter
-// // note: it will use urlDatabase as an argument and userURLS
-// const urlsForUser = function(id, urlDB, userURLdb) {
-//   //id = req.cookies['user_id'];
-
-//   // the object that will store this particular users information
-//   // it will not contain nested objects
-//   // shortURL:LongURL
-//   //let usersURLS = {};
-
-//   for (let x in urlDB) {
-    
-//     //console.log(urlDatabase[x]['user_id']);
-//     if (urlDB[x]['user_id'] === id) {
-//       userURLdb[x] = urlDB[x]['longURL'];
-//     }
-//   }
-//   console.log('here is the usersURLS object',userURLdb);
-//   return userURLdb;
-// }
 
 
 
