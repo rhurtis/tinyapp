@@ -71,7 +71,7 @@ app.get("/urls", (req,res) => {
   let templateVars = { 
   //urls: urlDatabase,
   //urls: urlsForUser(req.cookies['user_id']),
-  urls: urlsForUser(req.session['user_id']),
+  urls: urlsForUser(req.session['user_id'], urlDatabase, usersURLS),
   //username: req.cookies['username'],
   //username: users[req.cookies['user_id']]
   //user_id: users[req.cookies['user_id']]
@@ -186,11 +186,11 @@ app.post('/login', (req, res) => {
 
   // first use the emaillookup fcn to determine if the email exists in the db
 
-  if (emailLookup(req.body.email)) {
+  if (emailLookup(req.body.email, users)) {
     console.log('the email exists.');
 
     // retrieve the associated user info
-    let correctUserInfo = assID(req.body.email);
+    let correctUserInfo = assID(req.body.email, users);
     console.log('here is the correct info for this email',correctUserInfo);
     let correctID = correctUserInfo[0];
     let correctPW = correctUserInfo[2];
@@ -239,7 +239,7 @@ app.post('/register', (req,res) => {
   
   // the following if statement is for checking if the email address has already been used.
   usersPrecheck = req.body.email; //this variable stores the email input before submission
-  if (emailLookup(usersPrecheck)) {
+  if (emailLookup(usersPrecheck, users)) {
     //delete users[tempID] //deletes the user that was generated
     //res.clearCookie('user_id');
     
@@ -326,8 +326,33 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2,5);
 }
 
-const emailLookup = function (checkEmail) {
-  let allUsers = Object.keys(users); //need to know to loop through
+// const emailLookup = function (checkEmail) {
+//   let allUsers = Object.keys(users); //need to know to loop through
+//   //console.log('here are all the users',allUsers)
+//   // now loop through users object for every element in the allUsers array
+//   for (let user of allUsers) {
+//     //console.log('here is a user object',users[user]);
+
+//     // convert the user object into an array for looping, specifically get the values of the array.
+
+//     let userValues = Object.values(users[user]);
+//     //console.log('here are the values of this user object',userValues);
+
+
+//     // now check if a specific email is included in the values of that user
+//     if (userValues.includes(checkEmail)) {
+//       console.log('this email is in the db')
+//       return true;
+//     }
+//   }
+//   return false;
+// }
+
+
+// modifying the email lookup fcn to take in a database parameter
+// it passes the user fcn
+const emailLookup = function (checkEmail, database) {
+  let allUsers = Object.keys(database); //need to know to loop through
   //console.log('here are all the users',allUsers)
   // now loop through users object for every element in the allUsers array
   for (let user of allUsers) {
@@ -335,7 +360,7 @@ const emailLookup = function (checkEmail) {
 
     // convert the user object into an array for looping, specifically get the values of the array.
 
-    let userValues = Object.values(users[user]);
+    let userValues = Object.values(database[user]);
     //console.log('here are the values of this user object',userValues);
 
 
@@ -346,16 +371,51 @@ const emailLookup = function (checkEmail) {
     }
   }
   return false;
-}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // function that finds the associated id/pw of an email address.
-const assID = function(confirmedEmail) {
+// const assID = function(confirmedEmail) {
+//   //find the index of the id/pw in relation to the index of the email
+//   let allUsers = Object.keys(users);
+
+//   for (let user of allUsers) {
+//     let userValues = Object.values(users[user]);
+   
+//     if (userValues.includes(confirmedEmail)) {
+//       //onsole.log('this is the user data for the correct email:', userValues)
+//       //userValues.indexOf(confirmedEmail);
+//       return userValues;
+//     }
+    
+//   }
+// }
+
+
+
+
+
+// modifying the assID fcn above to pass any database
+// note:  it uses the users database as an argument
+const assID = function(confirmedEmail, database) {
   //find the index of the id/pw in relation to the index of the email
-  let allUsers = Object.keys(users);
+  let allUsers = Object.keys(database);
 
   for (let user of allUsers) {
-    let userValues = Object.values(users[user]);
+    let userValues = Object.values(database[user]);
    
     if (userValues.includes(confirmedEmail)) {
       //onsole.log('this is the user data for the correct email:', userValues)
@@ -371,7 +431,30 @@ const assID = function(confirmedEmail) {
 
 
 // function which returns the URLs where the userID is equal to the id of the currently logged-in user.
-const urlsForUser = function(id) {
+// const urlsForUser = function(id) {
+//   //id = req.cookies['user_id'];
+
+//   // the object that will store this particular users information
+//   // it will not contain nested objects
+//   // shortURL:LongURL
+//   //let usersURLS = {};
+
+//   for (let x in urlDatabase) {
+    
+//     //console.log(urlDatabase[x]['user_id']);
+//     if (urlDatabase[x]['user_id'] === id) {
+//       usersURLS[x] = urlDatabase[x]['longURL'];
+//     }
+//   }
+//   console.log('here is the usersURLS object',usersURLS);
+//   return usersURLS;
+// }
+
+
+
+// modifying the fcn above to pass a database parameter
+// note: it will use urlDatabase as an argument and userURLS
+const urlsForUser = function(id, urlDB, userURLdb) {
   //id = req.cookies['user_id'];
 
   // the object that will store this particular users information
@@ -379,14 +462,19 @@ const urlsForUser = function(id) {
   // shortURL:LongURL
   //let usersURLS = {};
 
-  for (let x in urlDatabase) {
+  for (let x in urlDB) {
     
     //console.log(urlDatabase[x]['user_id']);
-    if (urlDatabase[x]['user_id'] === id) {
-      usersURLS[x] = urlDatabase[x]['longURL'];
+    if (urlDB[x]['user_id'] === id) {
+      userURLdb[x] = urlDB[x]['longURL'];
     }
   }
-  console.log('here is the usersURLS object',usersURLS);
-  return usersURLS;
+  console.log('here is the usersURLS object',userURLdb);
+  return userURLdb;
 }
+
+
+
+
+
 
