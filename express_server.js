@@ -12,11 +12,17 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
-// object for storing urls
+// object for storing ALL urls
 const urlDatabase = {
   "b2xVn2": {longURL: "http://www.lighthouselabs.ca", user_id: "userRandomID"},
   "9sm5xK": {longURL: "http://www.google.com", user_id: "user2RandomID"}
 };
+
+// object for storing URLS that were filtered for each user.
+
+const usersURLS = {};
+
+
 
 const users = { 
   "userRandomID": {
@@ -53,7 +59,9 @@ app.get("/hello", (req, res) => {
 
 // new route for /urls; this will pass URL data to our template
 app.get("/urls", (req,res) => {
-  let templateVars = { urls: urlDatabase,
+  let templateVars = { 
+  //urls: urlDatabase,
+  urls: urlsForUser(req.cookies['user_id']),
   //username: req.cookies['username'],
   //username: users[req.cookies['user_id']]
   user_id: users[req.cookies['user_id']]
@@ -107,22 +115,33 @@ app.get('/login', (req,res) => {
 
 // post request for deleting urls
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log('the url is being deleted.',req.params.shortURL);
   
+  // if statement for making sure only a logged in user can delete
+  if (req.cookies['user_id'] === urlDatabase[req.params.shortURL].user_id){
+  console.log('the url is being deleted.',req.params.shortURL);
   delete urlDatabase[req.params.shortURL];
-  console.log(urlDatabase);
-  res.redirect('/urls');
+  delete usersURLS[req.params.shortURL];
+  console.log('here is the entire db after deletion',urlDatabase);
+  console.log('here is the usersURL db after deletion',usersURLS);
+  res.redirect('/urls');} else{
+    res.redirect('/login');
+  }
 
 })
 
 // post request for editing the url
 app.post("/urls/:shortURL", (req, res) => {
-  console.log('the following tiny url is being updated.',req.params.shortURL);
-  urlDatabase[req.params.shortURL] = {'longURL':req.body['longURL'], 'user_id':req.cookies['user_id']}
+  
+  // if statement for making sure only a logged in user can edit
+  if (req.cookies['user_id'] === urlDatabase[req.params.shortURL].user_id) {
+    console.log('the following tiny url is being updated.',req.params.shortURL);
+    urlDatabase[req.params.shortURL] = {'longURL':req.body['longURL'], 'user_id':req.cookies['user_id']}
   
   console.log(urlDatabase);
   //res.send(`/urls/${Object.keys(urlDatabase)[Object.values(urlDatabase).indexOf(req.body['longURL'])]}`);
-  res.redirect('/urls');
+  res.redirect('/urls');} else{
+    res.redirect('/login');
+  }
 })
 
 // post request for logging in (this is the old one.)
@@ -327,3 +346,28 @@ const assID = function(confirmedEmail) {
     
   }
 }
+
+
+
+
+
+// function which returns the URLs where the userID is equal to the id of the currently logged-in user.
+const urlsForUser = function(id) {
+  //id = req.cookies['user_id'];
+
+  // the object that will store this particular users information
+  // it will not contain nested objects
+  // shortURL:LongURL
+  //let usersURLS = {};
+
+  for (let x in urlDatabase) {
+    
+    //console.log(urlDatabase[x]['user_id']);
+    if (urlDatabase[x]['user_id'] === id) {
+      usersURLS[x] = urlDatabase[x]['longURL'];
+    }
+  }
+  console.log('here is the usersURLS object',usersURLS);
+  return usersURLS;
+}
+
