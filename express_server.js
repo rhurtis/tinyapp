@@ -29,7 +29,7 @@ const urlDatabase = {
 
 // object for storing URLS that were filtered for each user.
 
-const usersURLS = {};
+let usersURLS = {};
 
 
 
@@ -173,6 +173,7 @@ app.post('/logout', (req, res) => {
   console.log('user logged out')
   //res.clearCookie('user_id');
   req.session['user_id'] = null;
+  usersURLS = {};
   res.redirect('/login');
 
 
